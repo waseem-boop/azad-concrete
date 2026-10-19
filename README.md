@@ -1,17 +1,33 @@
 # Azad Concrete ERP
 
-Next.js App Router + TypeScript. Run `npm install`, then `npm run dev` and open http://localhost:3000.
+Next.js, TypeScript and Aiven PostgreSQL. The app root is `azad-concrete/`.
 
-## Implemented prototype
-Responsive dashboard, all 13 slab sizes and 25 girder sizes (10–22 ft, half-foot increments), searchable inventory and CSV export. Production adds finished goods and deducts sample raw-material consumption. Material receipts, gatepass dispatches and expenses are saved in browser localStorage. Insufficient material or finished stock is blocked. Data is illustrative, per browser, and is not a production accounting system.
+## Local setup
+1. Install packages: `npm ci`.
+2. Set `DATABASE_URL` and `AIVEN_CA_CERT` in `.env.local` (already configured locally). The CA value can contain literal escaped newlines (`\n`).
+3. Wait for the Aiven PostgreSQL service to show Running, then run `npm run db:setup`.
+4. Run `npm run dev`, open http://localhost:3000/signup and create your account.
 
-The production chart is explicitly illustrative. Recipe constants are sample estimates in src/app/page.tsx; actual factory recipes must be confirmed. Accounts shows invoice and expense totals only. Authentication, payment ledger, printable invoices, recipe editing and server persistence remain to be implemented.
+Every account gets a separate private workspace with zero quantities. Browser demo records are not imported into the database. Register once for your factory and reuse that login; team invitations and shared memberships are not implemented.
 
-## Aiven PostgreSQL foundation
-Copy .env.example to .env.local and provide an Aiven PostgreSQL connection URI and its project CA certificate. src/lib/db.ts provides a server-only pool with certificate verification. database/schema.sql contains the initial relational schema. Neither the database nor schema has been connected or applied. UI intentionally stays in local demo mode until authenticated transactional server workflows are added.
+## Workflow
+- Dashboard: summaries, actual production chart and read-only slab stock overview.
+- Stocks: custom slab sizes (feet), girder width/height (inches) and length (feet), per-piece material recipes, search and export.
+- Raw Material: add Saria, Gitian, Cement, Bajri and Rait receipts.
+- Production: requires a saved recipe and enough materials. Saves finished stock, deductions and batch atomically.
+- Gatepass: dispatch finished stock, record invoice amounts and print a gatepass.
+- Accounts: invoice totals, recorded customer payments, aggregate outstanding balance and expenses. This is an operational register, not a full double-entry accounting ledger.
+- Expenses: record descriptions and amounts.
 
-Before live use, production must run as one database transaction with row locks, sufficient-stock validation, recipe consumption snapshots and an audit trail. Gatepass stock deduction also needs a transaction. Add authentication and authorization before exposing write endpoints.
+Authenticated write routes validate inputs, lock the workspace row and save in a PostgreSQL transaction. The per-account workspace is stored as JSONB and write actions are audited. Passwords use salted scrypt hashes; sessions use random tokens stored as hashes, with HttpOnly/SameSite cookies and a seven-day lifetime. Login attempts have a database-backed limit. There is no email verification or password-reset service yet.
 
-## Checks
-npm run lint
-npm run build
+## Vercel deployment
+Set **Root Directory** to `azad-concrete` if importing the parent directory; if the repository starts inside this folder, leave Root Directory at its default. The project includes `vercel.json`.
+
+In Vercel → Project Settings → Environment Variables, add:
+- `DATABASE_URL`: copy the value from your local `.env.local`.
+- `AIVEN_CA_CERT`: paste the entire PEM certificate (actual newlines or escaped newlines both work).
+
+Add these to Production and any Preview environment you use, then deploy. Local `.env.local` is ignored by Git and is not uploaded by a repository deployment. Run `npm run db:setup` once against the intended database before signup. Builds deliberately do not require a running database, and do not run migrations automatically.
+
+Checks: `npm run lint` and `npm run build`.
