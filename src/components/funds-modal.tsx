@@ -1,0 +1,6 @@
+"use client";
+import {Check} from "lucide-react";
+import AppDialog from "./app-dialog";
+export default function FundsModal({busy,error,onClose,onSave}:{busy:boolean;error:string;onClose:()=>void;onSave:(p:Record<string,unknown>)=>Promise<void>}){
+ return <AppDialog title="Add funds" description="Add owner funds to Cash or Bank." onClose={onClose} busy={busy}><form className="money-form" onSubmit={event=>{event.preventDefault();const form=new FormData(event.currentTarget);void onSave({account:String(form.get("account")),amount:Number(form.get("amount")),note:String(form.get("note")??"")})}}><label>Add to<select name="account" required><option>Cash</option><option>Bank</option></select></label><label>Amount (Rs.)<input type="number" name="amount" min="0.01" step="0.01" required/></label><label>Note (optional)<input name="note" maxLength={200} placeholder="e.g. Owner deposit"/></label>{error&&<div className="form-error" role="alert">{error}</div>}<div className="money-form-actions"><button type="button" className="secondary" disabled={busy} onClick={onClose}>Cancel</button><button type="submit" className="primary" disabled={busy}><Check size={16}/>{busy?"Saving…":"Add funds"}</button></div></form></AppDialog>
+}

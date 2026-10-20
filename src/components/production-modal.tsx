@@ -1,0 +1,9 @@
+"use client";
+import {useState} from "react";
+import Link from "next/link";
+import type {Product} from "@/lib/model";
+import AppDialog from "./app-dialog";
+export default function ProductionModal({stock,productId,busy,error,onClose,onSave}:{stock:Product[];productId:string;busy:boolean;error:string;onClose:()=>void;onSave:(p:Record<string,unknown>)=>Promise<void>}){
+ const [id,setId]=useState(productId);const product=stock.find(p=>p.id===id),missingDimensions=product?.type==="Girder"&&(!product.width||!product.height);
+ return <AppDialog title="Record production" busy={busy} onClose={onClose}><form className="money-form" onSubmit={e=>{e.preventDefault();const f=new FormData(e.currentTarget);void onSave({product:id,quantity:Number(f.get("quantity"))})}}><fieldset disabled={busy} className="record-fields"><label>Product / size<select value={id} onChange={e=>setId(e.target.value)} required><option value="" disabled>Select a product</option>{stock.map(p=><option key={p.id} value={p.id}>{p.type} · {p.size}{p.type==="Slab"?" ft":""}</option>)}</select></label><label>Pieces produced<input name="quantity" type="number" min="1" max="1000000000" step="1" defaultValue="1" required/></label>{product&&!missingDimensions&&<p className="production-stock-note">Current finished stock: <strong>{product.stock.toLocaleString()} pieces</strong></p>}{(missingDimensions||!stock.length)&&<p className="form-error">{missingDimensions?"Set the girder width and height before recording production.":"Add or import your product sizes first."} <Link href="/stocks">Open Stocks</Link></p>}</fieldset>{error&&<p className="form-error" role="alert">{error}</p>}<div className="money-form-actions"><button type="button" className="secondary" disabled={busy} onClick={onClose}>Cancel</button><button className="primary" disabled={busy||!product||!!missingDimensions}>{busy?"Saving…":"Save production"}</button></div></form></AppDialog>
+}
