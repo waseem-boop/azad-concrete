@@ -25,6 +25,7 @@ try{
  r=await act('production',{product:id,quantity:10});check(r.res.ok&&r.data.stock.find(p=>p.id===id).stock===11&&r.data.materials.every(m=>m.stock===100),'production adds stock without deducting materials');
  r=await act('size',{id,type:'Slab',length:4,width:1,recipe:[1,1,1,1,1],confirmed:true});check(r.res.status===400,'produced dimensions protected');
  r=await act('production',{product:id,quantity:1000});check(r.res.ok,'production quantity is independent of raw receipts');
+ const pending=await request('/api/erp');for(const batch of pending.data.entries.filter(e=>e.product.startsWith('Slab'))){const opened=await act('production-opening',{batchId:batch.id,date:new Date().toLocaleDateString('en-CA',{timeZone:'Asia/Karachi'}),good:batch.quantity,damaged:0});check(opened.res.ok,'slab opening confirmed before sale')}
  r=await act('customer',{name:'Test customer',phone:'03000000000'});check(r.res.ok,'customer register');const customerId=r.data.customers[0].id;
  r=await act('gatepass',{product:id,quantity:3,rate:500,customerId});check(r.res.ok&&r.data.stock.find(p=>p.id===id).stock===1008&&r.data.bills[0].amount===1500,'gatepass deducts stock and totals invoice');
  r=await act('payment',{quantity:1,rate:1000,account:'Cash',customerId});check(r.res.ok&&r.data.bills[0].kind==='Payment','customer payment');

@@ -26,6 +26,7 @@ try{
  x=await req(1,'/api/team',{action:'update',email:emails[1],role:'manager',permissions:['settings_manage']});check(x.r.status===403,'member cannot escalate own access');
  const blocked=await fetch(base+'/accounts',{headers:{Cookie:cookies[1]},redirect:'manual'});check(blocked.status===307&&blocked.headers.get('location')==='/dashboard','direct restricted route blocked');
  const staffHtml=await (await fetch(base+'/stocks',{headers:{Cookie:cookies[1]}})).text();check(!staffHtml.includes('href="/accounts"')&&!staffHtml.includes('Import sizes')&&!staffHtml.includes('Add size'),'restricted navigation and product controls hidden');
+ x=await req(0,'/api/erp');for(const batch of x.d.entries){const opened=await act(0,'production-opening',{batchId:batch.id,date:new Date().toLocaleDateString('en-CA',{timeZone:'Asia/Karachi'}),good:batch.quantity,damaged:0});check(opened.r.ok,'owner confirms slab opening')}
  x=await update('cashier');check(x.r.ok,'owner changes member to cashier');
  x=await req(1,'/api/erp');check(x.d.access.role==='cashier'&&x.d.journals.length>0&&x.d.materials.length===0&&x.d.entries.length===0,'new role takes effect without new login');
  x=await act(1,'gatepass',{product:product.id,customerId,quantity:2,rate:1000});check(x.r.ok&&x.d.bills[0].kind==='Gatepass','cashier invoice dispatch works');

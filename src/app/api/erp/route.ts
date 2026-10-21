@@ -1,4 +1,5 @@
-import {recordMaterial,recordGatepass} from "@/lib/stock-records";
+import {recordMaterial,recordGatepass,ReceiptPermissionError} from "@/lib/stock-records";
+import {recordProductionOpening} from "@/lib/production-opening";
 import {workspaceEtag} from "@/lib/workspace-etag";
 import {validFactoryLogo} from "@/lib/cloudinary";
 import {allowed,actionPermission} from "@/lib/permissions";
@@ -58,8 +59,10 @@ export async function POST(request:Request){
  }else if(action==="production"){
  const q=positive(p.quantity,true),product=s.stock.find(x=>x.id===p.product);if(!product)fail("Product not found");if(product.type==="Girder"&&(!product.width||!product.height))fail("Configure girder width and height in Stocks first");if(product.stock+q>1e9)fail("Finished quantity is too large");product.stock+=q;
  s.entries.unshift({id:`PR-${randomUUID().slice(0,8).toUpperCase()}`,productId:product.id,product:`${product.type} · ${product.size}${product.type==="Slab"?" ft":""}`,quantity:q,date:new Date().toISOString()});
+ }else if(action==="production-opening"){
+ recordProductionOpening(s,p,user.name,post);
  }else if(action==="gatepass"){
- recordGatepass(s,p,post);
+ recordGatepass(s,p,post,allowed(membership,"accounts_manage"));
  }else if(action==="expense"||action==="payment"){
  const directAmount=p.amount!==undefined,q=directAmount?1:positive(p.quantity,true),rate=directAmount?amountValue(p.amount):positive(p.rate),amount=amountValue(q*rate),paymentAccount=funding(p.account);
  if(action==="expense")spend(paymentAccount,amount);const customer=s.customers.find(c=>c.id===p.customerId),name=action==="expense"?String(p.name??"").trim():customer?.name??"";if(action==="payment"&&!customer)fail("Select a customer from the customer register");if(name.length<2||name.length>200)fail("Enter a description or customer name (2–200 characters)");
@@ -73,6 +76,6 @@ export async function POST(request:Request){
  let debit=0,credit=0;for(const line of p.lines){if(!accounts.includes(line.account)||typeof line.debit!=="number"||typeof line.credit!=="number"||!Number.isFinite(line.debit)||!Number.isFinite(line.credit)||line.debit<0||line.credit<0||(line.debit>0)===(line.credit>0))fail("Each journal line needs one valid debit or credit");line.debit=Math.round(line.debit*100)/100;line.credit=Math.round(line.credit*100)/100;debit+=Math.round(line.debit*100);credit+=Math.round(line.credit*100)}if(debit!==credit||debit===0)fail("Journal debits and credits must balance");if(p.lines.some((l:{account:string})=>["Equipment","Asset revaluation","Raw material inventory","Finished goods inventory","Cost of goods sold"].includes(l.account)))fail("Use asset and material workflows for inventory and asset values");if(p.lines.some((l:{account:string})=>l.account==="Accounts receivable"))fail("Use invoices and customer payments for receivable entries");for(const account of ["Cash","Bank","Cash / Bank"]){const net=p.lines.filter((l:{account:string})=>l.account===account).reduce((n:number,l:{debit:number;credit:number})=>n+l.debit-l.credit,0);if(accountBalance(s.journals!,account)+net<-.001)fail(`Journal would overdraw ${account}`)}post(description,undefined,p.lines);
  }else fail("Unknown action");
  const updated=await client.query("UPDATE erp_workspaces SET state=$2,updated_at=now() WHERE user_id=$1 RETURNING updated_at::text||':'||md5(state::text) AS revision",[membership.workspace_id,JSON.stringify(s)]);await client.query("INSERT INTO erp_audit(user_id,action) VALUES($1,$2)",[user.id,action]);await client.query("COMMIT");return NextResponse.json(visibleState(s,membership),{headers:{"Cache-Control":"private, no-store","ETag":workspaceEtag(membership,updated.rows[0].revision),"Vary":"Cookie"}});
- }catch(e){await client.query("ROLLBACK");const message=e instanceof Error?e.message:"Unable to save";if((e as {code?:string}).code)throw e;return NextResponse.json({error:message},{status:400})}finally{client.release()}
+ }catch(e){await client.query("ROLLBACK");const message=e instanceof Error?e.message:"Unable to save";if((e as {code?:string}).code)throw e;return NextResponse.json({error:message},{status:e instanceof ReceiptPermissionError?403:400})}finally{client.release()}
  }catch{return NextResponse.json({error:"Database unavailable. Please try again shortly."},{status:503})}
 }

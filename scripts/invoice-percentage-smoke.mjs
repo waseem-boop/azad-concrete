@@ -1,0 +1,17 @@
+import env from '@next/env';import {Pool} from 'pg';import {randomBytes} from 'node:crypto';import assert from 'node:assert/strict';
+env.loadEnvConfig(process.cwd());const base=process.env.TEST_BASE_URL||'http://localhost:3108',email=`percent-check-${randomBytes(6).toString('hex')}@example.test`,password=randomBytes(18).toString('hex');let cookie='';
+const uri=new URL(process.env.DATABASE_URL);uri.searchParams.delete('sslmode');const db=new Pool({connectionString:uri.toString(),ssl:{rejectUnauthorized:true,ca:process.env.AIVEN_CA_CERT.replace(/\\n/g,'\n')},max:1});
+async function req(path,body){const r=await fetch(base+path,{method:body?'POST':'GET',headers:{Origin:base,...(cookie?{Cookie:cookie}:{}),...(body?{'Content-Type':'application/json'}:{})},...(body?{body:JSON.stringify(body)}:{})});return {r,d:await r.json()}}
+const act=(action,payload)=>req('/api/erp',{action,payload});function check(v,label){assert.ok(v,label);console.log('PASS:',label)}const balance=(s,a)=>Math.round(s.journals.reduce((n,j)=>n+j.lines.filter(l=>l.account===a).reduce((n,l)=>n+l.debit-l.credit,0),0)*100)/100;
+try{
+ let x=await req('/api/auth',{mode:'signup',name:'Invoice Percent Check',email,password});check(x.r.ok,'temporary signup');cookie=x.r.headers.get('set-cookie').split(';')[0];
+ x=await act('import-products',{ids:['S0']});check(x.r.ok,'import slab size');const product=x.d.stock[0].id;
+ x=await act('production',{product,quantity:20});check(x.r.ok,'record produced slabs');const batchId=x.d.entries[0].id,date=new Date().toLocaleDateString('en-CA',{timeZone:'Asia/Karachi'});
+ x=await act('production-opening',{batchId,date,good:20,damaged:0});check(x.r.ok,'confirm opening');
+ x=await act('customer',{name:'Percentage Dealer',phone:''});check(x.r.ok,'dealer creation');const customerId=x.d.customers[0].id;
+ x=await act('gatepass',{customerId,items:[{product,quantity:10,rate:1000}],discountPercent:10,payment:{status:'paid',method:'Split',cash:4000,bank:5000}});check(x.r.ok,'percentage invoice saved');let invoice=x.d.bills.find(b=>b.kind==='Gatepass');check(invoice.subtotal===10000&&invoice.discountPercent===10&&invoice.discount===1000&&invoice.amount===9000,'10% discount stored alongside calculated rupee amount');check(balance(x.d,'Cash')===4000&&balance(x.d,'Bank')===5000&&balance(x.d,'Accounts receivable')===0&&invoice.settlement.status==='paid','split receipts match discounted total');
+ x=await req('/api/erp');invoice=x.d.bills.find(b=>b.kind==='Gatepass');check(invoice.discountPercent===10&&invoice.amount===9000&&x.d.stock[0].availableStock===10,'percentage, settlement and remaining stock persist after reload');
+ x=await act('gatepass',{customerId,items:[{product,quantity:1,rate:1000}],discountPercent:101});check(x.r.status===400,'API rejects discount above 100%');
+ x=await act('gatepass',{customerType:'walk-in',name:'Walk In Buyer',items:[{product,quantity:1,rate:1000}],discountPercent:1});check(x.r.status===400,'walk-in percentage discount rejected');
+ x=await req('/api/erp');check(x.d.stock[0].availableStock===10&&x.d.bills.filter(b=>b.kind==='Gatepass').length===1,'failed discounts never dispatch stock or create invoices');
+}finally{await db.query('DELETE FROM erp_audit WHERE user_id IN(SELECT id FROM erp_users WHERE email=$1)',[email]);await db.query('DELETE FROM erp_users WHERE email=$1',[email]);await db.end();console.log('Temporary percentage account cleaned up')}

@@ -10,6 +10,7 @@ result=await act('material',{product:'Gitian',quantity:20,unit:'kg',rate:0});che
 for(const product of ['Gitian','Bajri','Rait']){result=await act('material',{product,quantity:100,unit:'cft',rate:10,account:'Accounts payable'});check(result.r.ok,'volume receipt '+product)}
 result=await act('size',{id:slabId,type:'Slab',length:3,width:1,recipe:[1,1,.1,1,1],confirmed:true,salePrice:1000});check(result.r.ok&&result.d.stock[0].salePrice===1000,'saved product sale price');
 result=await act('production',{product:slabId,quantity:10});check(result.r.ok&&result.d.entries[0].materialCost===undefined&&balance(result.d,'Finished goods inventory')===0,'production does not consume or capitalize materials');
+const batch=result.d.entries[0];result=await act('production-opening',{batchId:batch.id,date:new Date().toLocaleDateString('en-CA',{timeZone:'Asia/Karachi'}),good:batch.quantity,damaged:0});check(result.r.ok,'confirm opening before dispatch');
 result=await act('customer',{name:'Finance Customer',phone:''});const customerId=result.d.customers[0].id;
 result=await act('gatepass',{product:slabId,quantity:3,rate:1000,customerId});check(result.r.ok&&balance(result.d,'Cost of goods sold')===0&&balance(result.d,'Finished goods inventory')===0,'invoice posted without inferred material consumption');
 result=await act('payment',{quantity:1,rate:3000,customerId,account:'Bank'});check(result.r.ok&&balance(result.d,'Accounts receivable')===0&&balance(result.d,'Bank')===203000,'customer bank receipt');

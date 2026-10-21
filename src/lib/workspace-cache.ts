@@ -2,7 +2,7 @@ import type {State} from "./model";
 import type {Access} from "./permissions";
 export type WorkspaceData=State&{access:Access;workspaceId:string};
 export type CachedWorkspace={data:WorkspaceData;etag:string;savedAt:number};
-const name="azad-workspace-v2",memory=new Map<string,CachedWorkspace>(),writes=new Map<string,Promise<void>>();let generation=0;
+const name="azad-workspace-v5",memory=new Map<string,CachedWorkspace>(),writes=new Map<string,Promise<void>>();let generation=0;
 export function permissionKey(access:Access){return `${access.role}:${[...access.permissions].sort().join(",")}`}
 export function workspaceCacheKey(scope:string,access:Access){return `${scope}:${permissionKey(access)}`}
 function url(key:string){return `${location.origin}/__azad_local_data__/${encodeURIComponent(key)}`}
@@ -18,4 +18,4 @@ export async function saveWorkspaceCache(key:string,record:CachedWorkspace){
  writes.set(key,task);await task;if(writes.get(key)===task)writes.delete(key);
 }
 export async function removeWorkspaceCache(key:string){memory.delete(key);await writes.get(key);try{const cache=await caches.open(name);await cache.delete(url(key))}catch{}}
-export async function clearWorkspaceCache(){generation++;memory.clear();await Promise.allSettled([...writes.values()]);writes.clear();try{await Promise.all([caches.delete(name),caches.delete("azad-workspace-v1")])}catch{}}
+export async function clearWorkspaceCache(){generation++;memory.clear();await Promise.allSettled([...writes.values()]);writes.clear();try{await Promise.all([caches.delete(name),caches.delete("azad-workspace-v1"),caches.delete("azad-workspace-v2"),caches.delete("azad-workspace-v3"),caches.delete("azad-workspace-v4")])}catch{}}

@@ -4,7 +4,7 @@ export const permissionOptions=[
  {id:"stocks_manage",label:"Manage products",description:"Add/import sizes and edit sale prices"},
  {id:"materials_view",label:"View raw material",description:"See material receipts and quantities"},
  {id:"materials_manage",label:"Receive raw material",description:"Add stock and record purchases"},
- {id:"production",label:"Record production",description:"Record finished slab and girder quantities"},
+ {id:"production",label:"Record production",description:"Record production and slab opening results"},
  {id:"gatepass_view",label:"View invoices",description:"View and print gatepasses"},
  {id:"gatepass_manage",label:"Create invoices",description:"Dispatch stock and issue gatepasses"},
  {id:"accounts_view",label:"View accounts",description:"Cash/bank history, financial reports and customer ledgers"},
@@ -26,6 +26,6 @@ const dependencies:Partial<Record<Permission,Permission[]>>={stocks_manage:["sto
 export function normalizePermissions(value:unknown):Permission[]{if(!Array.isArray(value)||value.some(p=>!allPermissions.includes(p)))throw new Error("Choose valid feature permissions");const result=new Set<Permission>(value);for(const p of result)for(const d of dependencies[p]??[])result.add(d);return [...result]}
 export type Access={role:Role;permissions:Permission[]};
 export function allowed(access:Access,p:Permission){return access.role==="owner"||access.permissions.includes(p)}
-export const sectionPermission:Record<string,Permission>={dashboard:"dashboard",stocks:"stocks_view","raw-material":"materials_view",gatepass:"gatepass_view",accounts:"accounts_view",customers:"accounts_view",expenses:"expenses_view",assets:"assets_view",settings:"settings_manage"};
+export const sectionPermission:Record<string,Permission>={dashboard:"dashboard",stocks:"stocks_view","raw-material":"materials_view",gatepass:"gatepass_view",accounts:"accounts_view",customers:"accounts_view",expenses:"expenses_view",assets:"assets_view",settings:"settings_manage",production:"production"};
 export function landingPath(access:Access){const section=Object.keys(sectionPermission).find(k=>allowed(access,sectionPermission[k]));return section?`/${section}`:"/team"}
-export const actionPermission:Record<string,Permission>={size:"stocks_manage","import-products":"stocks_manage",material:"materials_manage",production:"production",gatepass:"gatepass_manage",customer:"accounts_manage",payment:"accounts_manage",expense:"expenses_manage",asset:"assets_manage",funds:"funds_manage",opening:"funds_manage",transfer:"funds_manage",journal:"journals_manage",settings:"settings_manage","material-settings":"settings_manage"};
+export const actionPermission:Record<string,Permission>={size:"stocks_manage","import-products":"stocks_manage",material:"materials_manage",production:"production","production-opening":"production",gatepass:"gatepass_manage",customer:"accounts_manage",payment:"accounts_manage",expense:"expenses_manage",asset:"assets_manage",funds:"funds_manage",opening:"funds_manage",transfer:"funds_manage",journal:"journals_manage",settings:"settings_manage","material-settings":"settings_manage"};
