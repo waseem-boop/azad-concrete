@@ -1,3 +1,4 @@
+import type {PayrollState} from "./payroll-model";
 export const slabSizes = ["3 × 1", "3.5 × 1", "4 × 1", "4.5 × 1", "5 × 1", "5.5 × 1", "3 × 1.5", "3.5 × 1.5", "4 × 1.5", "4.5 × 1.5", "5 × 1.5", "5.5 × 1.5", "6 × 1.5"];
 export type Product = {id:string;size:string;type:string;stock:number;length?:number;width?:number;height?:number;recipe?:number[];confirmed?:boolean;salePrice?:number;inventoryValue?:number;availableStock?:number;pendingStock?:number;damagedStock?:number;unconfirmedStock?:number};
 export const products:Product[] = [...slabSizes.map((size,i)=>({id:`S${i}`,size,type:"Slab",length:Number(size.split(" × ")[0]),width:Number(size.split(" × ")[1]),stock:[248,186,324,210,156,98,132,164,278,192,224,116,86][i]})), ...Array.from({length:25},(_,i)=>({id:`G${i}`,size:`${10+i*.5} ft`,length:10+i*.5,type:"Girder",stock:24+i*3})), ...[[6,9,15],[4,10,17],[5,13,22]].map(([width,height,length],i)=>({id:`EX${i}`,size:`${width}″ × ${height}″ × ${length}′`,width,height,length,type:"Girder",stock:0}))];
@@ -17,5 +18,5 @@ export type Journal={id:string;date:string;description:string;reference?:string;
 export type Asset={id:string;name:string;quantity:number;purchaseDate:string;purchaseValue:number;currentValue:number;condition:string;notes:string};
 export type FactorySettings={name:string;logo:string;address:string;phone:string;invoiceNote:string};
 export const defaultSettings:FactorySettings={name:"My Factory",logo:"",address:"",phone:"",invoiceNote:""};
-export type State={stock:Product[];materials:Material[];materialReceipts?:MaterialReceipt[];entries:Entry[];bills:Bill[];customers?:Customer[];journals?:Journal[];assets?:Asset[];openingBalances?:string[];settings?:FactorySettings};
+export type State={payroll?:PayrollState;stock:Product[];materials:Material[];materialReceipts?:MaterialReceipt[];entries:Entry[];bills:Bill[];customers?:Customer[];journals?:Journal[];assets?:Asset[];openingBalances?:string[];settings?:FactorySettings};
 export function emptyState():State{return {stock:[],materials:initialMaterials.map(m=>({...m,unit:m.name==="Gitian"?"kg":m.name==="Rait"||m.name==="Bajri"?"trali":m.unit,stock:0})),materialReceipts:[],entries:[],bills:[],customers:[],journals:[],assets:[],openingBalances:[],settings:{...defaultSettings}}}

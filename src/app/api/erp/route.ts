@@ -1,3 +1,4 @@
+import {recordPayroll} from "@/lib/payroll";
 import {recordMaterial,recordGatepass,ReceiptPermissionError} from "@/lib/stock-records";
 import {recordProductionOpening} from "@/lib/production-opening";
 import {workspaceEtag} from "@/lib/workspace-etag";
@@ -32,7 +33,9 @@ export async function POST(request:Request){
  const amountValue=(value:unknown)=>{const n=positive(value);const rounded=money(n);if(rounded<=0)fail("Amount must be at least Rs. 0.01");return rounded};
  const funding=(value:unknown)=>{if(value!=="Cash"&&value!=="Bank")fail("Select Cash or Bank");return value as string};
  const spend=(account:string,amount:number)=>{if(accountBalance(s.journals!,account)+.001<amount)fail(`Insufficient ${account} balance. Record opening funds or receipts first`)};
- if(action==="settings"){
+ if(["worker","attendance","salary","payroll-payment"].includes(action)){
+ recordPayroll(s,action,p,post,spend);
+ }else if(action==="settings"){
  const name=String(p.name??"").trim(),logo=String(p.logo??"");if(name.length<2||name.length>80)fail("Factory name must be 2–80 characters");if(!validFactoryLogo(logo,membership.workspace_id))fail("Upload a PNG, JPG or WebP logo from Factory settings");const address=String(p.address??"").trim(),phone=String(p.phone??"").trim(),invoiceNote=String(p.invoiceNote??"").trim();if(address.length>300||phone.length>40||invoiceNote.length>300)fail("Settings text exceeds the allowed length");s.settings={name,logo,address,phone,invoiceNote};
  }else if(action==="import-products"){
  if(!Array.isArray(p.ids)||p.ids.length<1||p.ids.length>100||p.ids.some((id:unknown)=>typeof id!=="string"))fail("Select product templates to import");const result=await client.query("SELECT product FROM erp_product_templates WHERE id=ANY($1::text[])",[p.ids]);if(result.rows.length!==new Set(p.ids).size)fail("Some templates no longer exist");let added=0;for(const row of result.rows){const t=row.product as Product;if(s.stock.some(x=>x.type===t.type&&x.length===t.length&&x.width===t.width&&x.height===t.height))continue;s.stock.push({...t,id:randomUUID(),stock:0,recipe:undefined,confirmed:false,salePrice:0,inventoryValue:0});added++}if(!added)fail("Selected sizes already exist in your stock list");

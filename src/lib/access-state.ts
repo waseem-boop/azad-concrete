@@ -6,6 +6,7 @@ import {stockAvailability} from "./stock-availability";
 export function visibleState(s:State,a:Access&{workspace_id?:string}):State & {access:Access;workspaceId?:string}{
  const can=(p:Parameters<typeof allowed>[1])=>allowed(a,p),finance=can("accounts_view"),settlements=finance||can("gatepass_view")?invoiceSettlements(s.bills):new Map();
  return {
+  payroll:can("payroll_view")&&s.payroll?{workers:s.payroll.workers,salaries:s.payroll.salaries,payments:s.payroll.payments,attendance:s.payroll.attendance}:undefined,
   access:{role:a.role,permissions:a.permissions},workspaceId:a.workspace_id,settings:s.settings,
   stock:can("dashboard")||can("stocks_view")?s.stock.map(p=>({id:p.id,size:p.size,type:p.type,stock:p.stock,length:p.length,width:p.width,height:p.height,confirmed:p.confirmed,salePrice:p.salePrice,inventoryValue:finance?p.inventoryValue:undefined,...stockAvailability(p,s.entries,s.bills)})):[],
   materials:can("dashboard")||can("materials_view")?s.materials.map(m=>({name:m.name,detail:m.detail,unit:m.unit,stock:m.stock,capacity:m.capacity,color:m.color,quantities:m.quantities,purchaseRate:finance||can("materials_manage")?m.purchaseRate:undefined,inventoryValue:finance?m.inventoryValue:undefined})):[],
