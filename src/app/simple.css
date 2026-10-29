@@ -33,6 +33,9 @@
 .app-shell.simple-ui,.app-shell.simple-ui main,.app-shell.simple-ui .content{background:var(--bg)!important;background-image:none!important}.app-shell.simple-ui::before,.app-shell.simple-ui::after{display:none!important}.app-shell.simple-ui .stat-value{background:none!important;-webkit-text-fill-color:var(--ink)}
 
 /* Consistent plain surfaces across every workspace and popup. */
+.app-shell.simple-ui .tabs button span{background:#e8edf4!important;color:#243b57!important;opacity:1!important;border-radius:4px;padding:2px 7px}
+.app-shell.simple-ui :is(.tabs,.money-tabs,.settings-tabs,.customer-kind-picker) button:is(.selected,[aria-selected="true"],[aria-pressed="true"]) :is(span,small,strong){color:#fff!important;opacity:1!important}
+.app-shell.simple-ui .tabs button:is(.selected,[aria-selected="true"],[aria-pressed="true"]) span{background:#164276!important;color:#fff!important}
 .app-shell.simple-ui{--surface:#fff;--accent:#215ba5}.app-shell.simple-ui[data-theme="dark"]{--surface:#1d2733;--accent:#aacbff}
 .app-shell.simple-ui :is(.panel,.stat-card,.size-card,.finance-dialog,.notification-panel,.profile-dropdown,.member-access-card,.template-option,.production-date-card,.gatepass-item,.gatepass-summary,.gatepass-payment,.money-overview,.invoice-register-entry,.settings-tab-panel,.permission-option,.dimension-guide,.notice,.money-legacy,.receipt-total,.opening-saved-note,.opening-stock-impact,.transaction-detail,.account-summary>div,.money-balances>div){background:var(--surface)!important;background-image:none!important;color:var(--ink)!important;border:1px solid var(--border)!important;border-radius:6px!important;box-shadow:none!important}
 .app-shell.simple-ui :is(.panel-heading,.finance-dialog-heading,.finance-dialog-body,.invoice-register-body,.settings-form,.accounting-body,.team-content,.import-body,.opening-form){background:transparent!important;box-shadow:none!important}
@@ -60,3 +63,28 @@
 @media(max-width:720px){.app-shell.simple-ui .finance-dialog-body{padding:18px}.app-shell.simple-ui .finance-dialog-heading{padding:16px 18px}.app-shell.simple-ui .money-form-grid{grid-template-columns:1fr}.app-shell.simple-ui .panel-heading{padding:18px!important;gap:14px;flex-wrap:wrap}.app-shell.simple-ui .money-actions{flex-wrap:wrap;gap:8px}.app-shell.simple-ui .money-form-actions{position:sticky;bottom:-18px;background:var(--surface);padding:14px 0}.app-shell.simple-ui .money-form-actions button{flex:1;min-width:0}.app-shell.simple-ui h1{font-size:23px!important}.app-shell.simple-ui .size-grid{grid-template-columns:1fr}.app-shell.simple-ui .permission-grid{grid-template-columns:1fr}}
 
 .app-shell.simple-ui :is(.money-form,.finance-form,.journal-form,.settings-fields,.record-fields){align-items:stretch!important;width:100%;max-width:none}.app-shell.simple-ui :is(.finance-form,.journal-form){display:grid;grid-template-columns:repeat(2,minmax(0,1fr));align-items:start!important}.app-shell.simple-ui .finance-form .asset-actions{grid-column:1/-1;justify-content:flex-start}.app-shell.simple-ui .finance-form label{color:var(--ink)!important}.app-shell.simple-ui .finance-form :is(input,select){margin-top:0}.app-shell.simple-ui .finance-form>button{align-self:end;justify-self:start;padding:10px 20px}@media(max-width:720px){.app-shell.simple-ui :is(.finance-form,.journal-form){grid-template-columns:1fr}}
+
+/* Keep selected controls readable when legacy child colors override inheritance. */
+.app-shell.simple-ui :is(.tabs,.money-tabs,.settings-tabs,.customer-kind-picker,.product-picker-filters,.notification-filters,.theme-picker) button{opacity:1;color:var(--ink);background:var(--surface)}
+.app-shell.simple-ui :is(.tabs,.money-tabs,.settings-tabs,.customer-kind-picker,.product-picker-filters,.notification-filters,.theme-picker) button:is(.selected,[aria-selected="true"],[aria-pressed="true"]){background:#215ba5!important;color:#fff!important;border-color:#215ba5!important;opacity:1;box-shadow:none!important}
+.app-shell.simple-ui :is(.tabs,.money-tabs,.settings-tabs,.customer-kind-picker,.product-picker-filters,.notification-filters,.theme-picker) button:is(.selected,[aria-selected="true"],[aria-pressed="true"]) :is(span,small,strong,svg){color:#fff!important;opacity:1!important;-webkit-text-fill-color:#fff}
+.app-shell.simple-ui :is(.tabs,.product-picker-filters) button:is(.selected,[aria-selected="true"],[aria-pressed="true"]) span{background:#164276!important;color:#fff!important}
+.app-shell.simple-ui .product-picker-filters button span{background:#e8edf4;color:#243b57;opacity:1}
+.app-shell.simple-ui .product-picker-options button[aria-selected="true"]{background:#e5eefb!important;color:#143b70!important;border-color:#215ba5!important}
+.app-shell.simple-ui .product-picker-options button[aria-selected="true"] :is(span,strong,small,svg){color:#143b70!important;opacity:1!important}
+.app-shell.simple-ui .production-date-card.selected{background:#e5eefb!important;border-color:#215ba5!important;color:#143b70!important}
+.app-shell.simple-ui .production-date-card.selected :is(strong,small,span,svg){color:#143b70!important;opacity:1!important}
+.app-shell.simple-ui .primary :is(span,strong,small){color:#fff!important;-webkit-text-fill-color:#fff}
+.app-shell.simple-ui .nav-item.active :is(span,svg){color:#174b91!important;opacity:1!important}
+.app-shell.simple-ui :is(.count-badge,.tabs button:not(.selected) span){background:#e8edf4!important;color:#243b57!important;opacity:1}
+.app-shell.simple-ui .tabs button:is(.selected,[aria-selected="true"],[aria-pressed="true"]) span{background:#164276!important;color:#fff!important}
+.app-shell.simple-ui :is(.money-tabs,.settings-tabs,.tabs,.customer-kind-picker,.product-picker-filters,.notification-filters,.theme-picker) button:disabled{opacity:.55}
+
+/* UI audit: keep long-dialog actions reachable and ancillary text legible. */
+.app-shell.simple-ui .finance-dialog .money-form-actions{position:sticky;bottom:0;z-index:4;background:var(--surface);padding:16px 0 8px;box-shadow:0 -6px 0 var(--surface);isolation:isolate}
+.app-shell.simple-ui .finance-dialog{scroll-padding-top:110px;scroll-padding-bottom:88px}
+.app-shell.simple-ui .notification-panel{z-index:80}.app-shell.simple-ui .notification-item{color:var(--ink)!important}.app-shell.simple-ui .notification-item :is(strong,small,time){color:var(--ink)!important;opacity:1}.app-shell.simple-ui .notification-item time{font-size:13px;color:var(--muted)!important}.app-shell.simple-ui .notification-heading h2 span,.app-shell.simple-ui .notification-count{background:#164276!important;color:#fff!important;opacity:1}
+.app-shell.simple-ui .profile-dropdown :is(strong,span,button){color:var(--ink)}
+.app-shell.simple-ui .product-picker-filters button:not([aria-pressed="true"]) span{background:#e8edf4!important;color:#243b57!important}
+.app-shell.simple-ui :is(.production-history-filters,.inventory-toolbar,.import-toolbar,.customer-detail-heading,.opening-detail-heading){gap:12px;flex-wrap:wrap}
+@media(max-width:720px){.app-shell.simple-ui .finance-dialog .money-form-actions{bottom:0;padding-bottom:12px}.app-shell.simple-ui .notification-panel{max-height:calc(100dvh - 90px);overflow-y:auto}.app-shell.simple-ui .production-history-filters .tabs{overflow:visible;flex-wrap:wrap}.app-shell.simple-ui .dimension-guide{display:flex;flex-direction:column;align-items:flex-start;padding:14px!important}.app-shell.simple-ui .customer-detail-heading .money-actions{width:100%}.app-shell.simple-ui .customer-detail-heading .money-actions button{flex:1 1 auto}}
